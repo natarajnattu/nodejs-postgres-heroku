@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include ../partials/header.ejs %>
+</head>
+
+<body>
+
+    <% include ../partials/nav.ejs %>
+
+        <div class="container">
+            <% results %>
+                <p>Database Results</p>
+
+                <ul>
+                    <% results.forEach(function(r) { %>
+                        <li>
+                            <%= r.id %> -
+                                <%= r.name %>
+                        </li>
+                        <% }); %>
+                </ul>
+
+        </div>
+
+</body>
+
+</html>

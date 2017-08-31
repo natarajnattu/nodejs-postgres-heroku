@@ -1,0 +1,209 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+        body {
+            background: #e5e5e5;
+            font-family: 'Open Sans', sans-serif;
+            width: 100%;
+            height: 100%;
+            overflow-y: scroll;
+        }
+        
+        .discussion {
+            list-style: none;
+            background: #e5e5e5;
+            margin: 0;
+            padding: 0 0 50px 0;
+        }
+        
+        .discussion li {
+            padding: 0.5rem;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        .discussion .avatar {
+            width: 40px;
+            position: relative;
+        }
+        
+        .discussion .avatar img {
+            display: block;
+            width: 100%;
+        }
+        
+        .other .avatar:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border: 5px solid white;
+            border-left-color: transparent;
+            border-bottom-color: transparent;
+        }
+        
+        .self {
+            justify-content: flex-end;
+            align-items: flex-end;
+            font-size: 16px;
+        }
+        
+        .self p {
+            font-size: 14px;
+            margin: 0 0 0.2rem 0;
+        }
+        
+        .self .messages {
+            order: 1;
+            border-bottom-right-radius: 0;
+        }
+        
+        .self .avatar {
+            order: 2;
+        }
+        
+        .self .avatar:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border: 5px solid white;
+            border-right-color: transparent;
+            border-top-color: transparent;
+            box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .messages p {
+            font-size: 14px;
+            margin: 0 0 0.2rem 0;
+        }
+        
+        .messages {
+            background: white;
+            padding: 10px;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+        }
+        
+        .messages p {
+            font-size: 0.8rem;
+            margin: 0 0 0.2rem 0;
+        }
+        
+        .messages time {
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+        
+        @keyframes pulse {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 0.5;
+            }
+        }
+        
+         ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+         ::-webkit-scrollbar-track {
+            border-radius: 10px;
+            background: #eee;
+        }
+        
+         ::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            background: #888;
+        }
+        
+         ::-webkit-scrollbar-thumb:window-inactive {
+            background: rgba(100, 100, 100, 0.4);
+        }
+
+    </style>
+</head>
+
+<body>
+    <section class="module" style="height: 100%; overflow-y: scroll">
+        <ol class="discussion" id="chat_container">
+        </ol>
+    </section>
+    <div class="foot" style="position: fixed; bottom: 0; width: 100%;">
+        <input id="text_box" style="width: 86%;height: 45px; border-radius: 0; float: left" placeholder="type... . ." type="text" class="form-control" name="" value="">
+        <button class="btn btn-default" style="float: left; border-radius: 0; height: 45px; width: 14%" onclick="pushmessagetoserver()">send</button>
+    </div>
+
+</body>
+<script src="https://code.jquery.com/jquery-1.12.4.js" integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU=" crossorigin="anonymous"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var chat_id = "x124"
+        var datetime = "";
+        var gl_name = "";
+        var gl_id;
+        getData = function(if_last_date_time = "") {
+            $.get("https://immense-everglades-84422.herokuapp.com/getM?last_datetime=" + if_last_date_time + "&id_ch=x124", function(data) {
+                //console.log(data)
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        if (gl_id != data[i].seq_id) {
+                            if (data[i].status == gl_name) {
+                                $("#chat_container").append('<li class="self"><div class="messages"><p style="font-size: 16px;">' + data[i].message + '</p><time>' + data[i].status + '</time></div></li>');
+                            } else {
+                                $("#chat_container").append('<li class="other"><div class="messages"><p style="font-size: 16px;">' + data[i].message + '</p><time>' + data[i].status + '</time></div></li>');
+                            }
+                            datetime = data[i].updated_time;
+                            gl_id = data[i].seq_id;
+                        }
+                    }
+                } else {
+                    // alert('something went wrong')
+                }
+            });
+        };
+
+
+        function myFunction() {
+            var txt;
+            var person = prompt("Please enter your name:", "Vicky");
+            if (person == null || person == "") {
+                txt = "User cancelled the prompt.";
+            } else {
+                txt = "Hello " + person + "! How are you today?";
+                gl_name = person;
+                getData(datetime);
+                setInterval(function() {
+                    getData(datetime);
+                }, 5000)
+            }
+        }
+        myFunction();
+
+
+        pushmessagetoserver = function() {
+            var text = $("#text_box").val();
+            if (text.length > 3) {
+                $("#chat_container").append('<li class="self"><div class="messages"><p style="font-size: 16px;">' + text + '</p><time>' + gl_name + '</time></div></li>');
+                $.get("https://immense-everglades-84422.herokuapp.com/postM?chat_id=" + chat_id + "&name=" + gl_name + "&message=" + text, function(data) {
+                    console.log(data);
+                });
+                $("#text_box").val("");
+            } else {
+                alert("enter something more than 3 characters")
+            }
+        }
+    });
+
+</script>
+
+</html>
